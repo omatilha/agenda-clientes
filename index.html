@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Clientes & Contatos - AgendaPro</title>
+  
+  <!-- PWA Meta Tags & Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#090d16">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AgendaPro">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
@@ -71,6 +82,12 @@
         </div>
 
         <div class="flex items-center space-x-2">
+          <!-- PWA Install Button -->
+          <button id="btn-install-app" onclick="installPWA()" class="hidden inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl border border-indigo-500/40 bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/30 transition shadow-sm animate-pulse">
+            <i class="fa-solid fa-download"></i>
+            <span class="hidden sm:inline">Instalar App</span>
+          </button>
+
           <button onclick="exportToCSV()" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-800/70 text-slate-200 hover:bg-slate-700 hover:text-white transition shadow-sm">
             <i class="fa-solid fa-file-csv text-emerald-400"></i>
             <span class="hidden sm:inline">Exportar CSV</span>
@@ -869,6 +886,53 @@
 
     // Initialize application on load
     document.addEventListener('DOMContentLoaded', init);
+
+    // ============================================
+    // PWA Service Worker & Installation Handling
+    // ============================================
+    let deferredPrompt = null;
+    const installBtn = document.getElementById('btn-install-app');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) {
+        installBtn.classList.remove('hidden');
+      }
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showToast('Aplicativo instalado com sucesso!');
+          }
+          deferredPrompt = null;
+          if (installBtn) installBtn.classList.add('hidden');
+        });
+      } else {
+        alert('Para instalar o aplicativo no celular:\n- No Chrome/Android: toque no menu (3 pontinhos) e em "Instalar aplicativo" ou "Adicionar à tela inicial".\n- No iPhone/Safari: toque no botão de Compartilhar e selecione "Adicionar à Tela de Início".');
+      }
+    }
+
+    window.addEventListener('appinstalled', () => {
+      if (installBtn) installBtn.classList.add('hidden');
+      showToast('AgendaPro instalado como aplicativo!');
+    });
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('Service Worker registrado com sucesso:', reg.scope);
+          })
+          .catch((err) => {
+            console.log('Falha ao registrar Service Worker:', err);
+          });
+      });
+    }
   </script>
 </body>
 </html>
