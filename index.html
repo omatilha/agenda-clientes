@@ -64,6 +64,45 @@
 </head>
 <body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col antialiased">
 
+  <!-- Splash Screen (Motion de abertura) -->
+  <style>
+    #splash{position:fixed;inset:0;z-index:9999;background:#090d16;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transition:opacity .6s ease,visibility .6s ease}
+    #splash.hide{opacity:0;visibility:hidden}
+    #splash .glow{position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.35),rgba(79,70,229,.15) 40%,transparent 70%);animation:glow 2.4s ease-in-out infinite;filter:blur(10px)}
+    #splash .ring{position:absolute;width:140px;height:140px;border-radius:50%;border:2px solid rgba(96,165,250,.5);animation:ring 1.8s ease-out .3s infinite;opacity:0}
+    #splash .ring.r2{animation-delay:.9s}
+    #splash .logo{position:relative;width:96px;height:96px;border-radius:28px;background:linear-gradient(135deg,#2563eb,#4f46e5);display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(37,99,235,.45);animation:pop .9s cubic-bezier(.34,1.56,.64,1) both}
+    #splash .logo i{color:#fff;font-size:42px;animation:fadeUp .6s ease .5s both}
+    #splash .logo::after{content:"";position:absolute;inset:0;border-radius:28px;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);background-size:250% 100%;animation:shine 1.2s ease .9s both}
+    #splash h1{margin-top:28px;font-size:30px;font-weight:700;letter-spacing:-.5px;color:#fff;display:flex}
+    #splash h1 span{display:inline-block;opacity:0;animation:letter .5s cubic-bezier(.34,1.56,.64,1) forwards}
+    #splash p{margin-top:6px;font-size:13px;color:#94a3b8;letter-spacing:3px;text-transform:uppercase;animation:fadeUp .6s ease 1.5s both}
+    #splash .bar{margin-top:28px;width:160px;height:3px;border-radius:9px;background:#1e293b;overflow:hidden}
+    #splash .bar div{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#818cf8);border-radius:9px;animation:load 1.6s ease-in-out .6s forwards}
+    @keyframes pop{0%{transform:scale(0) rotate(-45deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+    @keyframes fadeUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes shine{0%{background-position:150% 0}100%{background-position:-100% 0}}
+    @keyframes letter{0%{opacity:0;transform:translateY(20px) scale(.6)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes load{to{width:100%}}
+    @keyframes glow{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.1);opacity:1}}
+    @keyframes ring{0%{transform:scale(.7);opacity:.8}100%{transform:scale(2.4);opacity:0}}
+  </style>
+  <div id="splash">
+    <div class="glow"></div>
+    <div class="ring"></div><div class="ring r2"></div>
+    <div class="logo"><i class="fa-solid fa-address-book"></i></div>
+    <h1 id="splash-title"></h1>
+    <p>Gestão de Clientes</p>
+    <div class="bar"><div></div></div>
+  </div>
+  <script>
+    (function(){
+      const t=document.getElementById('splash-title');
+      'AgendaPro'.split('').forEach((c,i)=>{const s=document.createElement('span');s.textContent=c;s.style.animationDelay=(0.8+i*0.06)+'s';t.appendChild(s);});
+      setTimeout(()=>{const sp=document.getElementById('splash');sp.classList.add('hide');setTimeout(()=>sp.remove(),700);},2600);
+    })();
+  </script>
+
   <!-- Top Navigation Bar -->
   <header class="bg-[#111827]/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-30 shadow-lg shadow-black/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
