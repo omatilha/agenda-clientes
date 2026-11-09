@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Clientes & Contatos</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-200">
+            <i class="fa-solid fa-address-book text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-slate-800 leading-tight">AgendaPro</h1>
+            <p class="text-xs text-slate-500">Gestão Inteligente de Clientes</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="exportToCSV()" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-2 rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
+            <i class="fa-solid fa-file-csv text-emerald-600"></i>
+            <span class="hidden sm:inline">Exportar CSV</span>
+          </button>
+          <button onclick="openModal()" class="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition shadow-sm shadow-blue-200">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Novo Cliente</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- KPI / Statistics Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Total de Clientes</p>
+          <h3 id="stat-total" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-users"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Clientes Ativos</p>
+          <h3 id="stat-active" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-user-check"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Com WhatsApp</p>
+          <h3 id="stat-whatsapp" class="text-2xl font-bold text-emerald-500 mt-1">0</h3>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-green-50 text-emerald-500 flex items-center justify-center text-lg">
+          <i class="fa-brands fa-whatsapp"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Aniversários no Mês</p>
+          <h3 id="stat-birthdays" class="text-2xl font-bold text-amber-500 mt-1">0</h3>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-cake-candles"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters, Search and Actions Bar -->
+    <section class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+      <div class="relative w-full md:w-96">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Buscar por nome, telefone, e-mail..."
+          oninput="renderClients()"
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+        >
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Categoria:</span>
+          <select 
+            id="category-filter" 
+            onchange="renderClients()"
+            class="text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Todas</option>
+            <option value="Particular">Particular</option>
+            <option value="Convênio">Convênio</option>
+            <option value="VIP">VIP</option>
+            <option value="Recorrente">Recorrente</option>
+            <option value="Potencial">Potencial</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Status:</span>
+          <select 
+            id="status-filter" 
+            onchange="renderClients()"
+            class="text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Todos</option>
+            <option value="ativo">Ativos</option>
+            <option value="inativo">Inativos</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Client List / Table View -->
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto custom-scroll">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+            <tr>
+              <th scope="col" class="px-6 py-4 font-semibold">Cliente</th>
+              <th scope="col" class="px-6 py-4 font-semibold">Contato</th>
+              <th scope="col" class="px-6 py-4 font-semibold">Categoria</th>
+              <th scope="col" class="px-6 py-4 font-semibold">Status</th>
+              <th scope="col" class="px-6 py-4 font-semibold">Cidade</th>
+              <th scope="col" class="px-6 py-4 font-semibold text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="client-table-body" class="divide-y divide-slate-100">
+            <!-- Dynamic rows will be injected here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty state container -->
+      <div id="empty-state" class="hidden flex flex-col items-center justify-center p-12 text-center">
+        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4 text-2xl">
+          <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <h4 class="text-base font-semibold text-slate-700">Nenhum contato encontrado</h4>
+        <p class="text-sm text-slate-400 max-w-sm mt-1">Nenhum cliente corresponde aos critérios de busca ou sua lista está vazia.</p>
+        <button onclick="openModal()" class="mt-4 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-xl text-sm transition">
+          <i class="fa-solid fa-plus mr-1"></i> Cadastrar primeiro cliente
+        </button>
+      </div>
+
+      <!-- Footer count -->
+      <div class="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center text-xs text-slate-500">
+        <span id="showing-count">Mostrando 0 contatos</span>
+        <div class="flex gap-2">
+          <button onclick="loadSampleData()" class="text-blue-600 hover:underline">Carregar exemplos</button>
+          <span>•</span>
+          <button onclick="clearAllData()" class="text-rose-500 hover:underline">Limpar base</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Cadastro / Edição -->
+  <div id="client-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-semibold">
+            <i id="modal-icon" class="fa-solid fa-user-plus"></i>
+          </div>
+          <h3 id="modal-title" class="text-lg font-bold text-slate-800">Novo Cliente</h3>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <form id="client-form" onsubmit="handleFormSubmit(event)" class="overflow-y-auto p-6 space-y-4 custom-scroll">
+        <input type="hidden" id="client-id">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nome Completo *</label>
+          <input 
+            type="text" 
+            id="client-name" 
+            required 
+            placeholder="Ex: Maria Silva Sauro" 
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Telefone / WhatsApp *</label>
+            <input 
+              type="text" 
+              id="client-phone" 
+              required 
+              placeholder="(00) 00000-0000" 
+              oninput="maskPhone(this)"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">E-mail</label>
+            <input 
+              type="email" 
+              id="client-email" 
+              placeholder="cliente@email.com" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Categoria</label>
+            <select 
+              id="client-category" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <option value="Particular">Particular</option>
+              <option value="Convênio">Convênio</option>
+              <option value="VIP">VIP</option>
+              <option value="Recorrente">Recorrente</option>
+              <option value="Potencial">Potencial</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Data de Nascimento</label>
+            <input 
+              type="date" 
+              id="client-birthdate" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cidade / UF</label>
+            <input 
+              type="text" 
+              id="client-city" 
+              placeholder="Ex: São Paulo - SP" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Status</label>
+            <select 
+              id="client-status" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <option value="ativo">Ativo</option>
+              <option value="inativo">Inativo</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Observações / Histórico</label>
+          <textarea 
+            id="client-notes" 
+            rows="3" 
+            placeholder="Informações adicionais, preferências, tratamentos ou agendamentos..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button 
+            type="button" 
+            onclick="closeModal()" 
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 active:scale-95 transition shadow-sm shadow-blue-200">
+            Salvar Contato
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Detalhes do Cliente -->
+  <div id="details-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white relative">
+        <button onclick="closeDetailsModal()" class="absolute top-4 right-4 text-white/80 hover:text-white p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl font-bold text-white mb-3 shadow-inner" id="detail-avatar">
+          M
+        </div>
+        <h3 id="detail-name" class="text-xl font-bold leading-tight">Nome do Cliente</h3>
+        <span id="detail-category-badge" class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white">
+          Particular
+        </span>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-phone text-sm"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Telefone</p>
+            <p id="detail-phone" class="text-sm font-semibold text-slate-700">-</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+            <i class="fa-regular fa-envelope text-sm"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">E-mail</p>
+            <p id="detail-email" class="text-sm font-semibold text-slate-700">-</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-cake-candles text-sm"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Data de Nascimento</p>
+            <p id="detail-birthdate" class="text-sm font-semibold text-slate-700">-</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-location-dot text-sm"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Localização</p>
+            <p id="detail-city" class="text-sm font-semibold text-slate-700">-</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+          <p class="text-xs font-semibold text-slate-400 uppercase mb-1">Observações</p>
+          <p id="detail-notes" class="text-sm text-slate-600 whitespace-pre-line leading-relaxed">Nenhuma observação informada.</p>
+        </div>
+
+        <div class="pt-2 flex gap-2" id="detail-actions">
+          <!-- Action buttons (WhatsApp, call, edit) -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-slate-900 text-white text-sm">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toast-msg">Operação realizada com sucesso!</span>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    const STORAGE_KEY = 'agenda_clientes_v1';
+    let clients = [];
+
+    // Mock initial data if storage is empty
+    const initialClients = [
+      {
+        id: '1',
+        name: 'Ana Carolina Santos',
+        phone: '(11) 98765-4321',
+        email: 'ana.santos@email.com',
+        category: 'VIP',
+        birthdate: '1992-05-14',
+        city: 'São Paulo - SP',
+        status: 'ativo',
+        notes: 'Cliente fiel. Prefere atendimentos na parte da manhã.'
+      },
+      {
+        id: '2',
+        name: 'Carlos Eduardo Oliveira',
+        phone: '(11) 97654-3210',
+        email: 'carlos.oliveira@empresa.com',
+        category: 'Particular',
+        birthdate: '1985-11-20',
+        city: 'Campinas - SP',
+        status: 'ativo',
+        notes: 'Interessado em novos planos mensais.'
+      },
+      {
+        id: '3',
+        name: 'Juliana Mendes',
+        phone: '(21) 99887-6655',
+        email: 'juliana.mendes@gmail.com',
+        category: 'Convênio',
+        birthdate: '1998-03-08',
+        city: 'Rio de Janeiro - RJ',
+        status: 'inativo',
+        notes: 'Último contato em outubro. Aguardando retorno.'
+      }
+    ];
+
+    // Load clients from localStorage
+    function init() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          clients = JSON.parse(stored);
+        } catch (e) {
+          clients = initialClients;
+        }
+      } else {
+        clients = initialClients;
+        saveClients();
+      }
+      renderClients();
+    }
+
+    function saveClients() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+
+      toastMsg.innerText = message;
+      if (type === 'success') {
+        toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+      } else if (type === 'error') {
+        toastIcon.className = 'fa-solid fa-circle-exclamation text-rose-400';
+      } else {
+        toastIcon.className = 'fa-solid fa-info-circle text-blue-400';
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // Phone Input Mask
+    function maskPhone(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value.length > 11) value = value.slice(0, 11);
+      
+      if (value.length > 10) {
+        value = value.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      } else if (value.length > 5) {
+        value = value.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      } else if (value.length > 2) {
+        value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+      } else if (value.length > 0) {
+        value = value.replace(/^(\d{0,2})/, '($1');
+      }
+      input.value = value;
+    }
+
+    function getInitials(name) {
+      if (!name) return '??';
+      const parts = name.trim().split(' ');
+      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function getCleanPhone(phone) {
+      return (phone || '').replace(/\D/g, '');
+    }
+
+    // Render client list and KPI stats
+    function renderClients() {
+      const tbody = document.getElementById('client-table-body');
+      const emptyState = document.getElementById('empty-state');
+      const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+      const categoryFilter = document.getElementById('category-filter').value;
+      const statusFilter = document.getElementById('status-filter').value;
+
+      // Filter
+      const filtered = clients.filter(c => {
+        const matchesSearch = 
+          c.name.toLowerCase().includes(searchTerm) ||
+          c.phone.toLowerCase().includes(searchTerm) ||
+          (c.email && c.email.toLowerCase().includes(searchTerm)) ||
+          (c.city && c.city.toLowerCase().includes(searchTerm));
+        
+        const matchesCategory = !categoryFilter || c.category === categoryFilter;
+        const matchesStatus = !statusFilter || c.status === statusFilter;
+
+        return matchesSearch && matchesCategory && matchesStatus;
+      });
+
+      // Update statistics
+      const totalClients = clients.length;
+      const activeClients = clients.filter(c => c.status === 'ativo').length;
+      const whatsappClients = clients.filter(c => c.phone && c.phone.length >= 10).length;
+      
+      const currentMonth = new Date().getMonth() + 1;
+      const birthdayClients = clients.filter(c => {
+        if (!c.birthdate) return false;
+        const month = parseInt(c.birthdate.split('-')[1], 10);
+        return month === currentMonth;
+      }).length;
+
+      document.getElementById('stat-total').innerText = totalClients;
+      document.getElementById('stat-active').innerText = activeClients;
+      document.getElementById('stat-whatsapp').innerText = whatsappClients;
+      document.getElementById('stat-birthdays').innerText = birthdayClients;
+
+      document.getElementById('showing-count').innerText = `Mostrando ${filtered.length} de ${totalClients} contatos`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      const categoryColors = {
+        'VIP': 'bg-purple-50 text-purple-700 border-purple-200',
+        'Particular': 'bg-blue-50 text-blue-700 border-blue-200',
+        'Convênio': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'Recorrente': 'bg-amber-50 text-amber-700 border-amber-200',
+        'Potencial': 'bg-indigo-50 text-indigo-700 border-indigo-200'
+      };
+
+      tbody.innerHTML = filtered.map(client => {
+        const initials = getInitials(client.name);
+        const cleanPhone = getCleanPhone(client.phone);
+        const categoryClass = categoryColors[client.category] || 'bg-slate-100 text-slate-700 border-slate-200';
+        const isActive = client.status === 'ativo';
+
+        return `
+          <tr class="hover:bg-slate-50/70 transition group">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-semibold flex items-center justify-center text-xs shrink-0 shadow-sm">
+                  ${initials}
+                </div>
+                <div>
+                  <button onclick="viewDetails('${client.id}')" class="font-semibold text-slate-900 hover:text-blue-600 transition text-left">
+                    ${client.name}
+                  </button>
+                  <p class="text-xs text-slate-400">${client.email || 'Sem e-mail'}</p>
+                </div>
+              </div>
+            </td>
+
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-slate-700">${client.phone}</span>
+                ${cleanPhone ? `
+                  <a href="https://wa.me/55${cleanPhone}" target="_blank" title="Abrir conversa no WhatsApp" class="text-emerald-500 hover:text-emerald-600 p-1 rounded-md hover:bg-emerald-50 transition">
+                    <i class="fa-brands fa-whatsapp text-base"></i>
+                  </a>
+                ` : ''}
+              </div>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${categoryClass}">
+                ${client.category || 'Geral'}
+              </span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
+                <span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+                ${isActive ? 'Ativo' : 'Inativo'}
+              </span>
+            </td>
+
+            <td class="px-6 py-4 text-slate-500 text-xs">
+              ${client.city || '-'}
+            </td>
+
+            <td class="px-6 py-4 text-right">
+              <div class="inline-flex items-center gap-1">
+                <button onclick="viewDetails('${client.id}')" title="Visualizar Detalhes" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+                <button onclick="editClient('${client.id}')" title="Editar" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                  <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+                <button onclick="deleteClient('${client.id}')" title="Excluir" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Modal Form Logic
+    function openModal(editId = null) {
+      const modal = document.getElementById('client-modal');
+      const form = document.getElementById('client-form');
+      const title = document.getElementById('modal-title');
+      const icon = document.getElementById('modal-icon');
+
+      form.reset();
+
+      if (editId) {
+        const client = clients.find(c => c.id === editId);
+        if (client) {
+          title.innerText = 'Editar Cliente';
+          icon.className = 'fa-solid fa-user-pen';
+          document.getElementById('client-id').value = client.id;
+          document.getElementById('client-name').value = client.name;
+          document.getElementById('client-phone').value = client.phone;
+          document.getElementById('client-email').value = client.email || '';
+          document.getElementById('client-category').value = client.category || 'Particular';
+          document.getElementById('client-birthdate').value = client.birthdate || '';
+          document.getElementById('client-city').value = client.city || '';
+          document.getElementById('client-status').value = client.status || 'ativo';
+          document.getElementById('client-notes').value = client.notes || '';
+        }
+      } else {
+        title.innerText = 'Novo Cliente';
+        icon.className = 'fa-solid fa-user-plus';
+        document.getElementById('client-id').value = '';
+        document.getElementById('client-status').value = 'ativo';
+        document.getElementById('client-category').value = 'Particular';
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('client-modal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('client-id').value;
+      const name = document.getElementById('client-name').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      const email = document.getElementById('client-email').value.trim();
+      const category = document.getElementById('client-category').value;
+      const birthdate = document.getElementById('client-birthdate').value;
+      const city = document.getElementById('client-city').value.trim();
+      const status = document.getElementById('client-status').value;
+      const notes = document.getElementById('client-notes').value.trim();
+
+      if (!name || !phone) {
+        showToast('Preencha os campos obrigatórios (*)', 'error');
+        return;
+      }
+
+      if (id) {
+        // Update
+        const index = clients.findIndex(c => c.id === id);
+        if (index !== -1) {
+          clients[index] = { ...clients[index], name, phone, email, category, birthdate, city, status, notes };
+          showToast('Cliente atualizado com sucesso!');
+        }
+      } else {
+        // Create new
+        const newClient = {
+          id: Date.now().toString(),
+          name,
+          phone,
+          email,
+          category,
+          birthdate,
+          city,
+          status,
+          notes
+        };
+        clients.unshift(newClient);
+        showToast('Cliente cadastrado com sucesso!');
+      }
+
+      saveClients();
+      renderClients();
+      closeModal();
+    }
+
+    function editClient(id) {
+      openModal(id);
+    }
+
+    function deleteClient(id) {
+      const client = clients.find(c => c.id === id);
+      if (!client) return;
+
+      if (confirm(`Deseja realmente remover o cliente "${client.name}"?`)) {
+        clients = clients.filter(c => c.id !== id);
+        saveClients();
+        renderClients();
+        showToast('Cliente removido com sucesso!');
+      }
+    }
+
+    // Details Modal
+    function viewDetails(id) {
+      const client = clients.find(c => c.id === id);
+      if (!client) return;
+
+      document.getElementById('detail-avatar').innerText = getInitials(client.name);
+      document.getElementById('detail-name').innerText = client.name;
+      document.getElementById('detail-category-badge').innerText = `${client.category || 'Geral'} • ${client.status === 'ativo' ? 'Ativo' : 'Inativo'}`;
+      document.getElementById('detail-phone').innerText = client.phone || 'Não informado';
+      document.getElementById('detail-email').innerText = client.email || 'Não informado';
+      
+      let birthText = 'Não informada';
+      if (client.birthdate) {
+        const [year, month, day] = client.birthdate.split('-');
+        birthText = `${day}/${month}/${year}`;
+      }
+      document.getElementById('detail-birthdate').innerText = birthText;
+      document.getElementById('detail-city').innerText = client.city || 'Não informada';
+      document.getElementById('detail-notes').innerText = client.notes || 'Nenhuma observação informada.';
+
+      const cleanPhone = getCleanPhone(client.phone);
+      const actionsEl = document.getElementById('detail-actions');
+      actionsEl.innerHTML = `
+        ${cleanPhone ? `
+          <a href="https://wa.me/55${cleanPhone}" target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs transition">
+            <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
+          </a>
+        ` : ''}
+        ${client.email ? `
+          <a href="mailto:${client.email}" class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition">
+            <i class="fa-regular fa-envelope text-sm"></i> E-mail
+          </a>
+        ` : ''}
+        <button onclick="closeDetailsModal(); editClient('${client.id}')" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium text-xs transition">
+          <i class="fa-regular fa-pen-to-square"></i> Editar
+        </button>
+      `;
+
+      document.getElementById('details-modal').classList.remove('hidden');
+    }
+
+    function closeDetailsModal() {
+      document.getElementById('details-modal').classList.add('hidden');
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+      if (clients.length === 0) {
+        showToast('Nenhum dado para exportar.', 'error');
+        return;
+      }
+
+      const headers = ['ID', 'Nome', 'Telefone', 'Email', 'Categoria', 'Nascimento', 'Cidade', 'Status', 'Observacoes'];
+      const rows = clients.map(c => [
+        `"${c.id}"`,
+        `"${(c.name || '').replace(/"/g, '""')}"`,
+        `"${c.phone || ''}"`,
+        `"${c.email || ''}"`,
+        `"${c.category || ''}"`,
+        `"${c.birthdate || ''}"`,
+        `"${(c.city || '').replace(/"/g, '""')}"`,
+        `"${c.status || ''}"`,
+        `"${(c.notes || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `clientes_agenda_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Exportação concluída com sucesso!');
+    }
+
+    function loadSampleData() {
+      if (confirm('Deseja recarregar os clientes de exemplo?')) {
+        clients = [...initialClients];
+        saveClients();
+        renderClients();
+        showToast('Dados de exemplo carregados!');
+      }
+    }
+
+    function clearAllData() {
+      if (confirm('Tem certeza que deseja apagar TODOS os clientes? Esta ação não pode ser desfeita.')) {
+        clients = [];
+        saveClients();
+        renderClients();
+        showToast('Todos os clientes foram removidos.', 'info');
+      }
+    }
+
+    // Close modals on outside click
+    window.onclick = function(e) {
+      const clientModal = document.getElementById('client-modal');
+      const detailsModal = document.getElementById('details-modal');
+      if (e.target === clientModal) closeModal();
+      if (e.target === detailsModal) closeDetailsModal();
+    };
+
+    // Close on Escape key
+    window.onkeydown = function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeDetailsModal();
+      }
+    };
+
+    // Initialize application on load
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
